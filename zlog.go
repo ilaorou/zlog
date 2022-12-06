@@ -3,12 +3,11 @@ package zlog
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"time"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"os"
+	"time"
 )
 
 var levelMap = map[string]zapcore.Level{
@@ -21,23 +20,22 @@ var levelMap = map[string]zapcore.Level{
 	"fatal":  zapcore.FatalLevel,
 }
 
-type ZLogger struct {
-	*zap.SugaredLogger
-	init bool
-}
+//type sugaredLogger struct {
+//	*zap.SugaredLogger
+//	init bool
+//}
 
-var zLogger = &ZLogger{}
+var sugaredLogger *zap.SugaredLogger
 
-func (z ZLogger) Json(arg interface{}) {
-	body, _ := json.Marshal(arg)
-	z.Debug(string(body))
-}
+//func init() {
+//sugaredLogger = NewLogger("log.log", "debug", true, 10, 10, 10)
+//}
 
-func NewLogger(fileName, level string, mod bool, maxSize, maxBackups, maxAge int) *ZLogger {
-	if zLogger.init {
-		zLogger.Error("has init zLogger")
-		return zLogger
-	}
+func NewLogger(fileName, level string, mod bool, maxSize, maxBackups, maxAge int) {
+	//if sugaredLogger.init {
+	//	sugaredLogger.Error("has init sugaredLogger")
+	//	return sugaredLogger
+	//}
 	zapLevel, ok := levelMap[level]
 	if !ok { //默认info等级输出
 		zapLevel = zapcore.InfoLevel
@@ -83,7 +81,54 @@ func NewLogger(fileName, level string, mod bool, maxSize, maxBackups, maxAge int
 	} else {
 		log = zap.New(core)
 	}
-	zLogger.SugaredLogger = log.Sugar()
-	zLogger.init = true
-	return zLogger
+	sugaredLogger = log.Sugar()
+	//sugaredLogger.init = true
+	//return sugaredLogger
+}
+
+func Json(arg interface{}) {
+	body, _ := json.Marshal(arg)
+	sugaredLogger.Debug(string(body))
+}
+func Debug(args ...interface{}) {
+	sugaredLogger.Debug(args...)
+}
+func Debugf(template string, args ...interface{}) {
+	sugaredLogger.Debugf(template, args...)
+}
+func Info(args ...interface{}) {
+	sugaredLogger.Info(args...)
+}
+func Infof(template string, args ...interface{}) {
+	sugaredLogger.Infof(template, args...)
+}
+func Warn(args ...interface{}) {
+	sugaredLogger.Warn(args...)
+}
+func Warnf(template string, args ...interface{}) {
+	sugaredLogger.Warnf(template, args...)
+}
+func Error(args ...interface{}) {
+	sugaredLogger.Error(args...)
+}
+func Errorf(template string, args ...interface{}) {
+	sugaredLogger.Errorf(template, args...)
+}
+func DPanic(args ...interface{}) {
+	sugaredLogger.DPanic(args...)
+}
+func DPanicf(template string, args ...interface{}) {
+	sugaredLogger.DPanicf(template, args...)
+}
+func Panic(args ...interface{}) {
+	sugaredLogger.Panic(args...)
+}
+func Panicf(template string, args ...interface{}) {
+	sugaredLogger.Panicf(template, args...)
+}
+func Fatal(args ...interface{}) {
+	sugaredLogger.Fatal(args...)
+}
+func Fatalf(template string, args ...interface{}) {
+	sugaredLogger.Fatalf(template, args...)
 }
