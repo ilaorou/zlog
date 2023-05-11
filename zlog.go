@@ -42,7 +42,7 @@ func (z *ZLogger) Close() {
 	zLogger.SugaredLogger.Sync()
 }
 
-func NewLogger(fileName, level string, dev bool, maxSize, maxBackups, maxAge int) *ZLogger {
+func NewLogger(fileName, level, env string, maxSize, maxBackups, maxAge int) *ZLogger {
 	if zLogger.init {
 		zLogger.Error(_hasZLoggerErrMsg)
 		return zLogger
@@ -93,11 +93,25 @@ func NewLogger(fileName, level string, dev bool, maxSize, maxBackups, maxAge int
 
 	var core zapcore.Core
 	var log *zap.Logger
-	if dev { //开发者模式
+
+	switch env {
+	case "dev": //开发者模式
+		//控制输出的位置
+		writeSyncer := zapcore.AddSync(&lumberjack.Logger{
+			Filename:   fileName,   // 日志文件路径
+			MaxSize:    maxSize,    // 每个日志文件保存的最大尺寸 单位：M
+			MaxBackups: maxBackups, // 日志文件最多保存多少个备份
+			MaxAge:     maxAge,     // 文件最多保存多少天
+			Compress:   true,       // 是否压缩
+		})
+		writeSyncer = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), writeSyncer) //多路输出
+		core = zapcore.NewCore(encoder, writeSyncer, zapLevel)
+		log = zap.New(core)
+	case "tong": //自定义模式
 		core = zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zapLevel)
 		//writeSyncer = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), writeSyncer)//多路输出
 		log = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)) //输出行号
-	} else {
+	default: //prod
 		//控制输出的位置
 		writeSyncer := zapcore.AddSync(&lumberjack.Logger{
 			Filename:   fileName,   // 日志文件路径
@@ -108,7 +122,9 @@ func NewLogger(fileName, level string, dev bool, maxSize, maxBackups, maxAge int
 		})
 		core = zapcore.NewCore(encoder, writeSyncer, zapLevel)
 		log = zap.New(core)
+
 	}
+
 	zLogger.SugaredLogger = log.Sugar()
 	zLogger.init = true
 	return zLogger
